@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.domain.external.xerhard
+package nl.macmannes.xfm2.util.domain.external.json
 
 
 import kotlinx.serialization.SerialName
@@ -31,6 +31,7 @@ data class Program(
     fun toInternalModel(): Program {
         return Program(
                 shortName = this.shortName,
+                longName = this.longName,
                 parameters = this.parameters
                         .map(Parameter::toInternalModel)
                         .toMutableList()

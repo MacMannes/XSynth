@@ -82,7 +82,7 @@ class XFM2Service {
                 openPort(serialPort)
                 Thread.sleep(500)
 
-                println("Sending program to XMF2 buffer...\n")
+                println("Sending program to XMF2 buffer...")
 
                 program.parameters
                         .forEach { parameter ->
@@ -98,19 +98,17 @@ class XFM2Service {
                     serialPort.writeIntArray(intsToSend)
                 }
 
-                println("\nDone")
-
+                println("Done")
 
                 println("Verifying...")
 
                 serialPort.writeByte('d'.toByte())
-                val error = serialPort.readIntArray(512, 3000).toList()
+                val statusList = serialPort.readIntArray(512, 3000).toList()
                         .mapIndexed { index, value -> if (value == program.parameters[index].value) 0 else 1 }
-                        .contains(1)
-                if (error) {
+                if (statusList.contains(1)) {
                     System.err.println("Error: Could not put program into buffer")
                 } else {
-                    println("Successfully put program `${program.name}` into buffer")
+                    println("OK. Successfully put program `${program.name}` into buffer")
                 }
 
                 println("Closing COM port")

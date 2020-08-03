@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.domain.external.xerhard
+package nl.macmannes.xfm2.util.domain.external.json
 
 
 import kotlinx.serialization.SerialName
