@@ -1,8 +1,9 @@
-package nl.macmannes.xfm2.util.model
+package nl.macmannes.xfm2.util.domain.external.xerhard
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import nl.macmannes.xfm2.util.domain.Parameter
 
 @Serializable
 data class Parameter(
@@ -11,4 +12,8 @@ data class Parameter(
 
     @SerialName("Value")
     var value: Int = 0
-)
+) {
+    fun toInternalModel(): Parameter {
+        return Parameter(number, value)
+    }
+}

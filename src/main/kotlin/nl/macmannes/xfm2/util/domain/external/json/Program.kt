@@ -1,8 +1,9 @@
-package nl.macmannes.xfm2.util.model
+package nl.macmannes.xfm2.util.domain.external.xerhard
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import nl.macmannes.xfm2.util.domain.Program
 
 @Serializable
 data class Program(
@@ -26,4 +27,13 @@ data class Program(
 
     @SerialName("parameters")
     var parameters: List<Parameter> = listOf()
-)
+) {
+    fun toInternalModel(): Program {
+        return Program(
+                shortName = this.shortName,
+                parameters = this.parameters
+                        .map(Parameter::toInternalModel)
+                        .toMutableList()
+        )
+    }
+}
