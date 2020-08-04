@@ -7,3 +7,5 @@ build
 /out
 /*.json
 /*.syx
+/*.prg
+/*.mem
