@@ -103,8 +103,9 @@ class XFM2Service {
                 println("Verifying...")
 
                 serialPort.writeByte('d'.toByte())
-                val statusList = serialPort.readIntArray(512, 3000).toList()
-                        .mapIndexed { index, value -> if (value == program.parameters[index].value) 0 else 1 }
+                val currentValues = serialPort.readIntArray(512, 3000).toList()
+                val statusList = program.parameters
+                        .map { parameter -> if (parameter.value == currentValues[parameter.number]) 0 else 1 }
                 if (statusList.contains(1)) {
                     System.err.println("Error: Could not put program into buffer")
                 } else {
