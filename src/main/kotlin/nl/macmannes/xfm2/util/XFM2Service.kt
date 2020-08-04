@@ -93,7 +93,7 @@ class XFM2Service {
                     }
 
                     val intsToSend = intArrayOf(115, *parameterNumber, parameter.value)
-//                    println("Setting #${parameter.number} to ${parameter.value} (${intsToSend.toList().joinToString(" ") { "%02x".format(it) }})")
+                    println("Setting #${parameter.number} to ${parameter.value} (${intsToSend.toList().joinToString(" ") { "%02x".format(it) }})")
 
                     serialPort.writeIntArray(intsToSend)
                 }
