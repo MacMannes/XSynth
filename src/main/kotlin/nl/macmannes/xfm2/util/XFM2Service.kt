@@ -4,7 +4,7 @@ import jssc.SerialPort
 import jssc.SerialPortException
 import jssc.SerialPortList
 import nl.macmannes.xfm2.util.domain.FileHelper
-import java.util.concurrent.TimeUnit
+import nl.macmannes.xfm2.util.domain.external.yaml.YamlHelper
 
 
 class XFM2Service {
@@ -114,6 +114,7 @@ class XFM2Service {
                 println("Closing COM port")
                 serialPort.closePort()
 
+//                println("\n\n${YamlHelper.createYaml(program)}")
 
             } catch (e: Exception) {
                 System.err.println("Error: Could not put program into buffer (${e.message})")
