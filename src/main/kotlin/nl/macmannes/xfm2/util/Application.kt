@@ -12,6 +12,7 @@ fun main(args: Array<String>) {
 
     val options = Options()
             .addOption("lc", "list-comports", false, "Lists all available comports")
+            .addOption("ga", "get-active-program", false, "Gets current program")
             .addOption(
                 Option.builder("c")
                     .longOpt("comport")
@@ -50,6 +51,7 @@ fun main(args: Array<String>) {
         }
         comport != null -> {
             when {
+                (commandLine.hasOption("ga")) -> XFM2Service().getActiveProgram(comport)
                 (readProgramFileName != null) -> XFM2Service().readProgram(comport, readProgramFileName)
                 else -> XFM2Service().test(comport)
             }

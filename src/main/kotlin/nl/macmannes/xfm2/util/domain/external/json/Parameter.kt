@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 import nl.macmannes.xfm2.util.domain.Parameter
 
 @Serializable
-data class Parameter(
+data class xParameter(
     @SerialName("Par#")
     var number: Int = 0,
 

@@ -4,6 +4,8 @@ import jssc.SerialPort
 import jssc.SerialPortException
 import jssc.SerialPortList
 import nl.macmannes.xfm2.util.domain.FileHelper
+import nl.macmannes.xfm2.util.domain.Parameter
+import nl.macmannes.xfm2.util.domain.Program
 import nl.macmannes.xfm2.util.domain.external.yaml.YamlHelper
 
 
@@ -80,14 +82,15 @@ class XFM2Service {
                 println("Successfully read program `${program.name}` from disk")
 
                 openPort(serialPort)
-                Thread.sleep(500)
+//                Thread.sleep(500)
 
                 println("Sending program to XMF2 buffer...")
 
                 program.parameters
+                        .filter { it.number != 255 } // Parameter 255 can't be set
                         .forEach { parameter ->
                     val parameterNumber: IntArray = if (parameter.number > 254) {
-                        intArrayOf(255, parameter.number - 256)
+                        intArrayOf(255, parameter.number - 256) // The documentation says subtract 255, but I think that's incorrect
                     } else {
                         intArrayOf(parameter.number)
                     }
@@ -104,12 +107,13 @@ class XFM2Service {
 
                 serialPort.writeByte('d'.toByte())
                 val currentValues = serialPort.readIntArray(512, 3000).toList()
-                val statusList = program.parameters
-                        .map { parameter -> if (parameter.value == currentValues[parameter.number]) 0 else 1 }
-                if (statusList.contains(1)) {
-                    System.err.println("Error: Could not put program into buffer")
-                } else {
+                val errorList = program.parameters
+                        .filter { it.number != 255 } // Parameter 255 can't be set
+                        .mapNotNull { parameter -> if (parameter.value == currentValues[parameter.number]) null else Parameter(parameter.number, currentValues[parameter.number]) }
+                if (errorList.isEmpty()) {
                     println("OK. Successfully put program `${program.name}` into buffer")
+                } else {
+                    System.err.println("Error: Could not put program into buffer. Errors: $errorList")
                 }
 
                 println("Closing COM port")
@@ -123,6 +127,30 @@ class XFM2Service {
         }
     }
 
+
+    fun getActiveProgram(comPortName: String) {
+        getSerialPort(comPortName)?.let { serialPort ->
+            try {
+                openPort(serialPort)
+                Thread.sleep(500)
+
+                serialPort.writeByte('d'.toByte())
+                val currentValues = serialPort.readIntArray(512, 3000).toList()
+                val program = Program(
+                        shortName = "ActiveProgram",
+                        parameters = currentValues.mapIndexed { number, value -> Parameter(number, value) }
+                )
+
+                println("Closing COM port")
+                serialPort.closePort()
+
+                println("\n\n${YamlHelper.createYaml(program)}")
+
+            } catch (e: Exception) {
+                System.err.println("Error: Could not put program into buffer (${e.message})")
+            }
+        }
+    }
 
     private fun openPort(serialPort: SerialPort) {
         println("Opening COM port ${serialPort.portName}")
