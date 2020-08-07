@@ -1,9 +1,9 @@
 package nl.macmannes.xfm2.util
 
-import kotlinx.serialization.UnstableDefault
+import nl.macmannes.xfm2.util.domain.ProgramFactory
 import org.apache.commons.cli.*
 
-@UnstableDefault
+
 fun main(args: Array<String>) {
     println("#################")
     println("### XFM2 Util ###")
@@ -11,6 +11,7 @@ fun main(args: Array<String>) {
     println()
 
     val options = Options()
+            .addOption("dsl", "dsl-test", false, "Tests the DSL")
             .addOption("lc", "list-comports", false, "Lists all available comports")
             .addOption("ga", "get-active-program", false, "Gets current program")
             .addOption(
@@ -45,6 +46,7 @@ fun main(args: Array<String>) {
     val readProgramFileName: String? = commandLine.getOptionValue("rp")
 
     when {
+        commandLine.hasOption("dsl") -> testDsl()
         commandLine.hasOption("") -> printHelp(options)
         commandLine.hasOption("lc") -> {
             XFM2Service().listComPorts()
@@ -62,6 +64,29 @@ fun main(args: Array<String>) {
         }
 
     }
+
+}
+
+fun testDsl() {
+    val program = ProgramFactory.createDefault()
+
+    val keyPaths = program.parametersByKeyPath.keys.joinToString("\n")
+    println("KeyPaths for parameters:\n$keyPaths")
+
+    program.shortName = "Hallo"
+    program.longName = "Hallo daar"
+
+    val yaml = program.toString()
+    println("$yaml\n\n")
+    val parsedProgram = ProgramFactory.fromYaml(yaml)
+    println("$parsedProgram\n\n")
+
+    val parameterMap = program.parametersByNumber
+    println("Parameter 5 = ${parameterMap[5]?.value}")
+    println("Parameter 11 = ${parameterMap[11]?.value}")
+    parameterMap[286]?.let { it.value = 201 }
+    println("Parameter 286 = ${parameterMap[286]?.value}")
+    println("Parameter 286 (original = ${ProgramFactory.createDefault().parametersByNumber[286]?.value})")
 
 }
 

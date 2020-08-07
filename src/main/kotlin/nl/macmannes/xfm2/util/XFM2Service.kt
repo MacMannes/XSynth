@@ -6,7 +6,9 @@ import jssc.SerialPortList
 import nl.macmannes.xfm2.util.domain.FileHelper
 import nl.macmannes.xfm2.util.domain.Parameter
 import nl.macmannes.xfm2.util.domain.Program
-import nl.macmannes.xfm2.util.domain.external.yaml.YamlHelper
+import nl.macmannes.xfm2.util.domain.ProgramFactory
+import nl.macmannes.xfm2.util.extensions.toFormattedHexString
+import java.util.concurrent.TimeUnit
 
 
 class XFM2Service {
@@ -33,6 +35,9 @@ class XFM2Service {
                         val bytes: ByteArray = serialPort.readBytes(event.eventValue)
 
                         bytes.forEachIndexed { index, byte ->
+                            if (index > 0 && index % 10 == 0) {
+                                print(" ")
+                            }
                             if (index > 0 && index % 20 == 0) {
                                 println()
                             }
@@ -79,39 +84,37 @@ class XFM2Service {
         getSerialPort(comPortName)?.let { serialPort ->
             try {
                 val program = FileHelper.readFile(fileName)
-                println("Successfully read program `${program.name}` from disk")
+                val name = program.name
+                println("Successfully read program `$name` from disk")
 
                 openPort(serialPort)
-//                Thread.sleep(500)
 
                 println("Sending program to XMF2 buffer...")
 
                 program.parameters
                         .filter { it.number != 255 } // Parameter 255 can't be set
                         .forEach { parameter ->
-                    val parameterNumber: IntArray = if (parameter.number > 254) {
-                        intArrayOf(255, parameter.number - 256) // The documentation says subtract 255, but I think that's incorrect
-                    } else {
-                        intArrayOf(parameter.number)
-                    }
-
-                    val intsToSend = intArrayOf(115, *parameterNumber, parameter.value)
-                    println("Setting #${parameter.number} to ${parameter.value} (${intsToSend.toList().joinToString(" ") { "%02x".format(it) }})")
-
-                    serialPort.writeIntArray(intsToSend)
-                }
+                            writeParameter(parameter, serialPort)
+                        }
 
                 println("Done")
 
                 println("Verifying...")
 
-                serialPort.writeByte('d'.toByte())
-                val currentValues = serialPort.readIntArray(512, 3000).toList()
-                val errorList = program.parameters
-                        .filter { it.number != 255 } // Parameter 255 can't be set
-                        .mapNotNull { parameter -> if (parameter.value == currentValues[parameter.number]) null else Parameter(parameter.number, currentValues[parameter.number]) }
+                var errorList = verify(serialPort, program)
+                if (errorList.isNotEmpty()) {
+                    println("Some parameters could not be sent. Retrying in a while...")
+                    TimeUnit.MILLISECONDS.sleep(400)
+                    errorList
+                            .map { error -> program.parameters.first { it.number == error.number} }
+                            .forEach { parameter ->
+                                writeParameter(parameter, serialPort)
+                            }
+                    errorList = verify(serialPort, program)
+                }
+
                 if (errorList.isEmpty()) {
-                    println("OK. Successfully put program `${program.name}` into buffer")
+                    println("OK. Successfully put program `$name` into buffer")
                 } else {
                     System.err.println("Error: Could not put program into buffer. Errors: $errorList")
                 }
@@ -127,24 +130,50 @@ class XFM2Service {
         }
     }
 
+    private fun verify(serialPort: SerialPort, program: Program): List<Parameter> {
+        serialPort.writeByte('d'.toByte())
+        val currentValues = serialPort.readIntArray(512, 3000).toList()
+        val errorList = program.parameters
+                .filter { it.number != 255 } // Parameter 255 can't be set
+                .mapNotNull { parameter -> if (parameter.value == currentValues[parameter.number]) null else parameter }
+        return errorList
+    }
+
+    private fun writeParameter(parameter: Parameter, serialPort: SerialPort) {
+        val parameterNumber: IntArray = if (parameter.number > 254) {
+            intArrayOf(255, parameter.number - 256) // The documentation says subtract 255, but I think that's incorrect
+        } else {
+            intArrayOf(parameter.number)
+        }
+
+        val intsToSend = intArrayOf(115, *parameterNumber, parameter.value)
+        println("Setting #${parameter.number} to ${parameter.value} (${intsToSend.toList().joinToString(" ") { "%02x".format(it) }})")
+
+        serialPort.writeIntArray(intsToSend)
+    }
+
 
     fun getActiveProgram(comPortName: String) {
         getSerialPort(comPortName)?.let { serialPort ->
             try {
                 openPort(serialPort)
-                Thread.sleep(500)
 
                 serialPort.writeByte('d'.toByte())
                 val currentValues = serialPort.readIntArray(512, 3000).toList()
-                val program = Program(
-                        shortName = "ActiveProgram",
-                        parameters = currentValues.mapIndexed { number, value -> Parameter(number, value) }
-                )
+                val parameters = currentValues.mapIndexed { number, value -> number to value }
+                val program = ProgramFactory.fromParameterValuePairs(parameters).apply {
+                    shortName = "ActiveProgram"
+                }
 
                 println("Closing COM port")
                 serialPort.closePort()
 
-                println("\n\n${YamlHelper.createYaml(program)}")
+                println("---------- HEX -----------")
+                println(currentValues.toFormattedHexString())
+
+                println("---------- YAML ----------")
+                println(program)
+                println("--------------------------")
 
             } catch (e: Exception) {
                 System.err.println("Error: Could not put program into buffer (${e.message})")

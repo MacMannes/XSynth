@@ -4,6 +4,7 @@ package nl.macmannes.xfm2.util.domain.external.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import nl.macmannes.xfm2.util.domain.Program
+import nl.macmannes.xfm2.util.domain.ProgramFactory
 
 @Serializable
 data class Program(
@@ -29,12 +30,14 @@ data class Program(
     var parameters: List<Parameter> = listOf()
 ) {
     fun toInternalModel(): Program {
-        return Program(
-                shortName = this.shortName,
-                longName = this.longName,
-                parameters = this.parameters
-                        .map(Parameter::toInternalModel)
-                        .toMutableList()
+        val program = ProgramFactory.fromParameterValuePairs(
+            this.parameters.map { it.number to it.value }
         )
+
+        program.shortName = shortName
+        program.longName = longName
+
+        return program
+
     }
 }

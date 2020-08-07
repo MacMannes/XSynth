@@ -12,8 +12,4 @@ data class Parameter(
 
     @SerialName("Value")
     var value: Int = 0
-) {
-    fun toInternalModel(): Parameter {
-        return Parameter(number, value)
-    }
-}
+)
