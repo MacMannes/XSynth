@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.extensions
+package nl.macmannes.xsynth.extensions
 
 fun Int.toBinaryString(len: Int = 8): String {
     return String.format(

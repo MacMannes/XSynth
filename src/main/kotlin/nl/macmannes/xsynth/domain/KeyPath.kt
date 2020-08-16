@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
 data class KeyPath(val value: String = "") {
     fun byAppending(newValue: String): KeyPath {

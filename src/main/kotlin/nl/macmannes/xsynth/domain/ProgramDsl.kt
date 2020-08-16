@@ -1,12 +1,13 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
 @DslMarker
 annotation class ProgramDsl
 
 @ProgramDsl
 class ProgramBuilder {
-    var shortName = "INITIAL-PROGRAM"
-    var longName: String? = null
+    var type = Program.Type.XFM2
+    var name = "INITIAL-PROGRAM"
+    var nameRange: IntRange? = null
 
     private val sections = mutableListOf<Section>()
 
@@ -21,17 +22,17 @@ class ProgramBuilder {
     }
 
     fun build(): Program {
-        return Program(shortName, longName, sections)
+        return Program(type, name, sections, nameRange)
     }
 
     /**
-     * This method shadows the [co.zsmb.villagedsl.advanced.dsl1.village] method when inside the scope
-     * of a [ProgramBuilder], so that villages can't be nested.
+     * This method shadows the [nl.macmannes.xsynth.domain.program] method when inside the scope
+     * of a [ProgramBuilder], so that programs can't be nested.
      */
     @Suppress("UNUSED_PARAMETER")
     @Deprecated(level = DeprecationLevel.ERROR,
         message = "Programs can't be nested.")
-    fun programs(param: () -> Unit = {}) {
+    fun program(param: () -> Unit = {}) {
     }
 
 }
@@ -52,10 +53,23 @@ class SectionBuilder(private val keyPath: KeyPath, val name: String) {
         children += sectionBuilder.build()
     }
 
-    fun operatorParameters(name: String = "", setup: OperatorParametersBuilder.() -> Unit = {}) {
-        val operatorParameterBuilder = OperatorParametersBuilder(
-            keyPath.byAppending(this.name),
-            name
+    fun operatorParameters(name: String = "", setup: ParameterListBuilder.() -> Unit = {}) {
+        val operatorParameterBuilder = ParameterListBuilder(
+            keyPath = keyPath.byAppending(this.name),
+            initialName = name,
+            parameterPrefix = "OP",
+            max = 6
+        )
+        operatorParameterBuilder.setup()
+        children += operatorParameterBuilder.build()
+    }
+
+    fun oscillatorParameters(name: String = "", setup: ParameterListBuilder.() -> Unit = {}) {
+        val operatorParameterBuilder = ParameterListBuilder(
+            keyPath = keyPath.byAppending(this.name),
+            initialName = name,
+            parameterPrefix = "OSC",
+            max = 4
         )
         operatorParameterBuilder.setup()
         children += operatorParameterBuilder.build()
@@ -70,23 +84,26 @@ class SectionBuilder(private val keyPath: KeyPath, val name: String) {
 }
 
 @ProgramDsl
-class OperatorParametersBuilder(
+open class ParameterListBuilder(
     private val keyPath: KeyPath,
-    initialName: String
+    initialName: String,
+    private val parameterPrefix: String,
+    private val max: Int
 ) {
     var name: String = initialName
     var comment: String? = null
     var type: Parameter.Type = Parameter.Type.INTEGER
 
-    private val parameters = mutableListOf<OperatorParameter>()
+    private val parameters = mutableListOf<IndexedParameter>()
 
-    operator fun OperatorParameter.unaryPlus() {
+    operator fun IndexedParameter.unaryPlus() {
         parameters += this
     }
 
     fun parameter(operatorNumber: Int, setup: ParameterBuilder.() -> Unit = {}) {
-        val parameterBuilder = OperatorParameterBuilder(
+        val parameterBuilder = IndexedParameterBuilder(
             keyPath.byAppending(name),
+            parameterPrefix,
             operatorNumber
         )
         parameterBuilder.type = type
@@ -94,15 +111,16 @@ class OperatorParametersBuilder(
         parameters += parameterBuilder.build()
     }
 
-    fun build(): OperatorParameters {
-        assert(parameters.size == 6) { "OperatorParameters should contain 6 parameters" }
-        return OperatorParameters(name, comment, parameters, type)
+    fun build(): ParameterList {
+        assert(parameters.size == max) { "ParameterList from type $parameterPrefix should contain $max parameters" }
+        return ParameterList(name, comment, parameters, type)
     }
 }
 
-class OperatorParameterBuilder(keyPath: KeyPath, private val operatorNumber: Int) : ParameterBuilder(keyPath, "OP$operatorNumber") {
-    override fun build(): OperatorParameter {
-        return OperatorParameter(
+class IndexedParameterBuilder(keyPath: KeyPath, private val prefix: String, private val operatorNumber: Int) : ParameterBuilder(keyPath, "$prefix$operatorNumber") {
+    override fun build(): IndexedParameter {
+        return IndexedParameter(
+            prefix,
             keyPath,
             operatorNumber,
             number,

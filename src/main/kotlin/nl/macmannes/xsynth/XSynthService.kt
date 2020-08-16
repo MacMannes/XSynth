@@ -1,17 +1,17 @@
-package nl.macmannes.xfm2.util
+package nl.macmannes.xsynth
 
 import jssc.SerialPort
 import jssc.SerialPortException
 import jssc.SerialPortList
-import nl.macmannes.xfm2.util.domain.FileHelper
-import nl.macmannes.xfm2.util.domain.Parameter
-import nl.macmannes.xfm2.util.domain.Program
-import nl.macmannes.xfm2.util.domain.ProgramFactory
-import nl.macmannes.xfm2.util.extensions.toFormattedHexString
+import nl.macmannes.xsynth.domain.FileHelper
+import nl.macmannes.xsynth.domain.Parameter
+import nl.macmannes.xsynth.domain.Program
+import nl.macmannes.xsynth.domain.ProgramFactory
+import nl.macmannes.xsynth.extensions.toFormattedHexString
 import java.util.concurrent.TimeUnit
 
 
-class XFM2Service {
+class XSynthService() {
     fun listComPorts() {
         println("Available COM ports:")
         SerialPortList.getPortNames().forEachIndexed {index, name ->
@@ -78,12 +78,12 @@ class XFM2Service {
         }
     }
 
-    fun readProgram(comPortName: String, fileName: String) {
+    fun uploadProgram(comPortName: String, fileName: String, type: Program.Type) {
         println("Reading program `$fileName`")
 
         getSerialPort(comPortName)?.let { serialPort ->
             try {
-                val program = FileHelper.readFile(fileName)
+                val program = FileHelper.readFile(fileName, type)
                 val name = program.name
                 println("Successfully read program `$name` from disk")
 
@@ -153,7 +153,23 @@ class XFM2Service {
     }
 
 
-    fun getActiveProgram(comPortName: String) {
+    fun initProgram(comPortName: String) {
+        getSerialPort(comPortName)?.let { serialPort ->
+            try {
+                openPort(serialPort)
+
+                serialPort.writeByte('i'.toByte())
+
+                println("Closing COM port")
+                serialPort.closePort()
+
+            } catch (e: Exception) {
+                System.err.println("Error: Could not init program (${e.message})")
+            }
+        }
+    }
+
+    fun getActiveProgram(comPortName: String, type: Program.Type) {
         getSerialPort(comPortName)?.let { serialPort ->
             try {
                 openPort(serialPort)
@@ -161,9 +177,7 @@ class XFM2Service {
                 serialPort.writeByte('d'.toByte())
                 val currentValues = serialPort.readIntArray(512, 3000).toList()
                 val parameters = currentValues.mapIndexed { number, value -> number to value }
-                val program = ProgramFactory.fromParameterValuePairs(parameters).apply {
-                    shortName = "ActiveProgram"
-                }
+                val program = ProgramFactory.fromParameterValuePairs(parameters, type)
 
                 println("Closing COM port")
                 serialPort.closePort()

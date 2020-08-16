@@ -7,7 +7,7 @@ plugins {
 
 group 'nl.macmannes'
 version '1.0-SNAPSHOT'
-applicationName = 'xfm2'
+applicationName = 'xsynth'
 
 repositories {
     jcenter()
@@ -23,6 +23,6 @@ dependencies {
 }
 
 application {
-    mainClassName = 'nl.macmannes.xfm2.util.ApplicationKt'
+    mainClassName = 'nl.macmannes.xsynth.ApplicationKt'
 }
 

@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.extensions
+package nl.macmannes.xsynth.extensions
 
 fun ByteArray.toHex(): String {
     return joinToString(" ") { it.toHex() }

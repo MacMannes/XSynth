@@ -1,10 +1,10 @@
-package nl.macmannes.xfm2.util.domain.external.json
+package nl.macmannes.xsynth.domain.external.json
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import nl.macmannes.xfm2.util.domain.Program
-import nl.macmannes.xfm2.util.domain.ProgramFactory
+import nl.macmannes.xsynth.domain.Program
+import nl.macmannes.xsynth.domain.ProgramFactory
 
 @Serializable
 data class Program(
@@ -29,13 +29,13 @@ data class Program(
     @SerialName("parameters")
     var parameters: List<Parameter> = listOf()
 ) {
-    fun toInternalModel(): Program {
+    fun toInternalModel(type: Program.Type): Program {
         val program = ProgramFactory.fromParameterValuePairs(
-            this.parameters.map { it.number to it.value }
+            this.parameters.map { it.number to it.value },
+            type
         )
 
-        program.shortName = shortName
-        program.longName = longName
+        program.name = shortName
 
         return program
 

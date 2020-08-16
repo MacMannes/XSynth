@@ -1,9 +1,8 @@
-package nl.macmannes.xfm2.util.domain.external.json
+package nl.macmannes.xsynth.domain.external.json
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import nl.macmannes.xfm2.util.domain.Parameter
 
 @Serializable
 data class Parameter(

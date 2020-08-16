@@ -1,19 +1,24 @@
-package nl.macmannes.xfm2.util
+package nl.macmannes.xsynth
 
-import nl.macmannes.xfm2.util.domain.ProgramFactory
+import nl.macmannes.xsynth.domain.Program
+import nl.macmannes.xsynth.domain.Program.Type.*
+import nl.macmannes.xsynth.domain.ProgramFactory
+import nl.macmannes.xsynth.extensions.toPositiveInt
 import org.apache.commons.cli.*
 
 
 fun main(args: Array<String>) {
-    println("#################")
-    println("### XFM2 Util ###")
-    println("#################")
+    println("##############")
+    println("### XSynth ###")
+    println("##############")
     println()
 
     val options = Options()
+            .addOption("m", "mode", true, "XFM2 or XVA1 mode")
             .addOption("dsl", "dsl-test", false, "Tests the DSL")
             .addOption("lc", "list-comports", false, "Lists all available comports")
-            .addOption("ga", "get-active-program", false, "Gets current program")
+            .addOption("gp", "get-program", false, "Gets current program")
+            .addOption("ip", "init-program", false, "Inits program")
             .addOption(
                 Option.builder("c")
                     .longOpt("comport")
@@ -23,15 +28,14 @@ fun main(args: Array<String>) {
                     .build()
             )
             .addOption(
-                Option.builder("rp")
-                    .longOpt("read-program")
+                Option.builder("u")
+                    .longOpt("upload")
                     .argName("file")
                     .hasArg()
-                    .desc("Reads a program from disk and puts it in the XFM2 buffer")
+                    .desc("Reads a program from disk and uploads it in the XFM2 buffer")
                     .build()
             )
             .addOption("h", "help", false, "Shows this help text")
-
 
     val commandLine: CommandLine
     try {
@@ -42,20 +46,26 @@ fun main(args: Array<String>) {
         return
     }
 
+    val mode: String? = commandLine.getOptionValue("m")
+
+    val programType: Program.Type = if (mode.equals("XVA1", ignoreCase = true)) XVA1 else XFM2
+
     val comport: String? = commandLine.getOptionValue("c")
-    val readProgramFileName: String? = commandLine.getOptionValue("rp")
+    val inputFileName: String? = commandLine.getOptionValue("rp")
 
     when {
         commandLine.hasOption("dsl") -> testDsl()
         commandLine.hasOption("") -> printHelp(options)
         commandLine.hasOption("lc") -> {
-            XFM2Service().listComPorts()
+            XSynthService().listComPorts()
         }
         comport != null -> {
             when {
-                (commandLine.hasOption("ga")) -> XFM2Service().getActiveProgram(comport)
-                (readProgramFileName != null) -> XFM2Service().readProgram(comport, readProgramFileName)
-                else -> XFM2Service().test(comport)
+                (commandLine.hasOption("ip")) -> XSynthService().initProgram(comport)
+                (commandLine.hasOption("gp")) -> XSynthService().getActiveProgram(comport, programType)
+                (inputFileName != null) -> XSynthService()
+                    .uploadProgram(comport, inputFileName, programType)
+                else -> XSynthService().test(comport)
             }
         }
         else -> {
@@ -68,13 +78,18 @@ fun main(args: Array<String>) {
 }
 
 fun testDsl() {
-    val program = ProgramFactory.createDefault()
+    val program = ProgramFactory.createXFM2Program()
+
+    val nameInts = program.name.toByteArray().map { it.toPositiveInt() }
+    println("nameInts: $nameInts")
+
+    val name = String(nameInts.map { it.toByte() }.toByteArray())
+    println("name from Ints: $name")
 
     val keyPaths = program.parametersByKeyPath.keys.joinToString("\n")
     println("KeyPaths for parameters:\n$keyPaths")
 
-    program.shortName = "Hallo"
-    program.longName = "Hallo daar"
+    program.name = "Hallo"
 
     val yaml = program.toString()
     println("$yaml\n\n")
@@ -86,10 +101,10 @@ fun testDsl() {
     println("Parameter 11 = ${parameterMap[11]?.value}")
     parameterMap[286]?.let { it.value = 201 }
     println("Parameter 286 = ${parameterMap[286]?.value}")
-    println("Parameter 286 (original = ${ProgramFactory.createDefault().parametersByNumber[286]?.value})")
+    println("Parameter 286 (original = ${ProgramFactory.createXFM2Program().parametersByNumber[286]?.value})")
 
 }
 
 private fun printHelp(options: Options?) {
-    HelpFormatter().printHelp("xfm2", options)
+    HelpFormatter().printHelp("xsynth", options)
 }

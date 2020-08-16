@@ -1,6 +1,6 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
-import nl.macmannes.xfm2.util.extensions.toBinaryString
+import nl.macmannes.xsynth.extensions.toBinaryString
 
 open class Parameter(
     val keyPath: KeyPath,
@@ -11,7 +11,7 @@ open class Parameter(
     val type: Type
 ) : Element {
     override fun render(builder: StringBuilder, indent: String) {
-        comment?.let { builder.append("$indent#$it\n") }
+        comment?.let { builder.append("\n$indent#$it\n") }
         val valueToPrint: String = if (type == Type.INTEGER) value.toString() else "`${value.toBinaryString()}`"
         builder.append("$indent$name: $valueToPrint")
     }

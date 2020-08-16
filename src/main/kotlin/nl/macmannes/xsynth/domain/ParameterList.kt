@@ -1,17 +1,16 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
-data class OperatorParameters(
+data class ParameterList(
     val name: String,
     val comment: String?,
     val parameters: List<Parameter>,
     val type: Parameter.Type
 ) : Element {
     override fun render(builder: StringBuilder, indent: String) {
+        comment?.let { builder.append("\n$indent#$it:\n") }
         builder.append("$indent$name:")
-        comment?.let { builder.append("\n$indent  #$it\n") }
         if (type == Parameter.Type.INTEGER) {
-            val parameterIndent = if (comment != null) indent else ""
-            builder.append("$parameterIndent  { ")
+            builder.append("  { ")
         }
         parameters.forEachIndexed { index, p ->
             if (type == Parameter.Type.BITWISE) {

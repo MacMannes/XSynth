@@ -1,17 +1,17 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
-import nl.macmannes.xfm2.util.extensions.intFromBinary
+import nl.macmannes.xsynth.extensions.intFromBinary
 
 data class Program(
-    var shortName: String,
-    var longName: String?,
-    val sections: List<Section>
+    var type: Type,
+    var name: String,
+    val sections: List<Section>,
+    val nameRange: IntRange? = null
 ) : Element {
-    val name: String
-        get() {
-            val long = longName
-            return if (long.isNullOrEmpty()) shortName else long
-        }
+    enum class Type {
+        XFM2,
+        XVA1
+    }
 
     val parameters: List<Parameter> by lazy { sections.map { it.parameters }.flatten() }
     val parametersByNumber: Map<Int, Parameter> by lazy { parameters.map { it.number to it }.toMap() }
@@ -38,11 +38,10 @@ data class Program(
     }
 
     override fun render(builder: StringBuilder, indent: String) {
-        builder.append("${indent}XFM2-Program:\n")
+        builder.append("${indent}${type.name}-Program:\n")
         val newIndent = "$indent  "
 
-        builder.append("${newIndent}ShortName: $shortName\n")
-        longName?.let { builder.append("${newIndent}LongName: $it\n") }
+        builder.append("${newIndent}Name: $name\n")
 
         builder.append("\n")
 

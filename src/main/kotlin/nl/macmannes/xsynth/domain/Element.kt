@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
 interface Element {
     fun render(builder: StringBuilder, indent: String)

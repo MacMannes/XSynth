@@ -1,4 +1,4 @@
-package nl.macmannes.xfm2.util.domain
+package nl.macmannes.xsynth.domain
 
 data class Section(
     val name: String,
@@ -11,7 +11,7 @@ data class Section(
             return children.map {
                 when (it) {
                     is Section -> it.parameters
-                    is OperatorParameters -> it.parameters
+                    is ParameterList -> it.parameters
                     is Parameter -> listOf(it)
                     else -> listOf()
                 }
@@ -31,14 +31,11 @@ data class Section(
         }
 
     override fun render(builder: StringBuilder, indent: String) {
-        builder.append("$indent$name:\n")
+        builder.append("\n$indent$name:\n")
         for (c in children) {
             c.render(builder, "$indent  ")
             builder.append("\n")
         }
     }
 
-    object Names {
-        const val OperatorStructureAndParameters = "OperatorStructureAndParameters"
-    }
 }

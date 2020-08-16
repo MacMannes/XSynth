@@ -1,13 +1,13 @@
-package nl.macmannes.xfm2.util.domain.external.sysex
+package nl.macmannes.xsynth.domain.external.sysex
 
-import nl.macmannes.xfm2.util.domain.Program
-import nl.macmannes.xfm2.util.domain.ProgramFactory
-import nl.macmannes.xfm2.util.extensions.toHex
-import nl.macmannes.xfm2.util.extensions.toInt
+import nl.macmannes.xsynth.domain.Program
+import nl.macmannes.xsynth.domain.ProgramFactory
+import nl.macmannes.xsynth.extensions.toHex
+import nl.macmannes.xsynth.extensions.toInt
 import java.io.File
 
 object SysExHelper {
-    fun readSysExFile(file: File): Program {
+    fun readSysExFile(file: File, type: Program.Type): Program {
         val name = file.name
 
         val sysEx = file.readBytes()
@@ -24,8 +24,8 @@ object SysExHelper {
                     .map { (it.first() to it.last()).toInt(7) }
                     .mapIndexed { index, value -> index to value }
 
-            return ProgramFactory.fromParameterValuePairs(parameters).apply {
-                shortName = name
+            return ProgramFactory.fromParameterValuePairs(parameters, type).apply {
+                this.name = name
             }
 
         } else {
