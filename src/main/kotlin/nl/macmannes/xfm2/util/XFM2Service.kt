@@ -140,10 +140,10 @@ class XFM2Service {
     }
 
     private fun writeParameter(parameter: Parameter, serialPort: SerialPort) {
-        val parameterNumber: IntArray = if (parameter.number > 254) {
-            intArrayOf(255, parameter.number - 256) // The documentation says subtract 255, but I think that's incorrect
-        } else {
+        val parameterNumber: IntArray = if (parameter.number < 256) {
             intArrayOf(parameter.number)
+        } else {
+            intArrayOf(255, parameter.number - 256)
         }
 
         val intsToSend = intArrayOf(115, *parameterNumber, parameter.value)
