@@ -4,13 +4,15 @@ import net.mamoe.yamlkt.*
 
 object ProgramFactory {
     fun fromYaml(yaml: String, type: Program.Type = Program.Type.XFM2): Program {
+        //TODO: Determine type from YAML itself
         val program = when(type) {
             Program.Type.XFM2 -> createXFM2Program()
             Program.Type.XVA1 -> createXVA1Program()
         }
 
         val map: Map<String?, Any?> = Yaml.default.parseMap(yaml)
-        (map["{${type.name}}-Program"] as? Map<*, *>)?.let {
+        val firstElementName = "${type.name}-Program"
+        (map[firstElementName] as? Map<*, *>)?.let {
             processYamlProgram(
                 it,
                 program
@@ -41,9 +43,6 @@ object ProgramFactory {
             }
         }
 
-//        program.nameRange?.mapNotNull {
-//            pa
-//        }
         return program
     }
 
@@ -569,10 +568,18 @@ object ProgramFactory {
                 parameter(4) { number = 10 }
             }
 
+            oscillatorParameters("WAVE") {
+                comment = "0 = saw up, 1 = saw down, 2 = square (pulse), 3 = triangle, 4 = sine, 5 = noise"
+                parameter(1) { number = 11 }
+                parameter(2) { number = 12 }
+                parameter(3) { number = 13 }
+                parameter(4) { number = 14 }
+            }
+
             oscillatorParameters("P_WIDTH") {
                 comment = "128 = square"
-                parameter(1) { number = 14; value = 128 }
-                parameter(2) { number = 15; value = 128 }
+                parameter(1) { number = 15; value = 128 }
+                parameter(2) { number = 16; value = 128 }
                 parameter(3) { number = 17; value = 128 }
                 parameter(4) { number = 18; value = 128 }
             }
@@ -609,7 +616,7 @@ object ProgramFactory {
                 parameter(1) { number = 31 }
                 parameter(2) { number = 33 }
                 parameter(3) { number = 35 }
-                parameter(4) { number = 35 }
+                parameter(4) { number = 37 }
             }
 
             oscillatorParameters("LEVEL_R") {

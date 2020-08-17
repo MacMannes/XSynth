@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
     val programType: Program.Type = if (mode.equals("XVA1", ignoreCase = true)) XVA1 else XFM2
 
     val comport: String? = commandLine.getOptionValue("c")
-    val inputFileName: String? = commandLine.getOptionValue("rp")
+    val inputFileName: String? = commandLine.getOptionValue("u")
 
     when {
         commandLine.hasOption("dsl") -> testDsl()
@@ -63,8 +63,7 @@ fun main(args: Array<String>) {
             when {
                 (commandLine.hasOption("ip")) -> XSynthService().initProgram(comport)
                 (commandLine.hasOption("gp")) -> XSynthService().getActiveProgram(comport, programType)
-                (inputFileName != null) -> XSynthService()
-                    .uploadProgram(comport, inputFileName, programType)
+                (inputFileName != null) -> XSynthService().uploadProgram(comport, inputFileName, programType)
                 else -> XSynthService().test(comport)
             }
         }

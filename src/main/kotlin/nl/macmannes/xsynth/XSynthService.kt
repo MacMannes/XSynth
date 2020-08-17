@@ -159,6 +159,7 @@ class XSynthService() {
                 openPort(serialPort)
 
                 serialPort.writeByte('i'.toByte())
+                serialPort.readBytes(1, 3000)
 
                 println("Closing COM port")
                 serialPort.closePort()
