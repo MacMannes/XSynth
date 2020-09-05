@@ -1,5 +1,6 @@
 package nl.macmannes.xsynth.domain
 
+import kotlinx.serialization.parseMap
 import net.mamoe.yamlkt.*
 
 object ProgramFactory {
@@ -10,7 +11,7 @@ object ProgramFactory {
             Program.Type.XVA1 -> createXVA1Program()
         }
 
-        val map: Map<String?, Any?> = Yaml.default.parseMap(yaml)
+        val map: Map<String?, Any?> = Yaml.default.decodeMapFromString(yaml)
         val firstElementName = "${type.name}-Program"
         (map[firstElementName] as? Map<*, *>)?.let {
             processYamlProgram(
