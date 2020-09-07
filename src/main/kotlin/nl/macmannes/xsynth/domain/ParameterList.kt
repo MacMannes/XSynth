@@ -9,8 +9,9 @@ data class ParameterList(
     override fun render(builder: StringBuilder, indent: String) {
         comment?.let { builder.append("\n$indent#$it:\n") }
         builder.append("$indent$name:")
-        if (type == Parameter.Type.INTEGER) {
-            builder.append("  { ")
+        when (type) {
+            Parameter.Type.BITWISE -> builder.append("\n")
+            Parameter.Type.INTEGER -> builder.append("  { ")
         }
         parameters.forEachIndexed { index, p ->
             if (type == Parameter.Type.BITWISE) {
